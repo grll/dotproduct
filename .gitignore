@@ -4,3 +4,4 @@ main
 main.o
 data_generation
 data_generation.o
+.ipynb_checkpoints
