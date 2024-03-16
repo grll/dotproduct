@@ -1,7 +1,8 @@
 *.binary
 gmon.out
+*.o
+*.s
 main
-main.o
-data_generation
-data_generation.o
+generate_data
+asm
 .ipynb_checkpoints

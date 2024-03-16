@@ -1,8 +1,9 @@
 import struct
 import time
+import numpy as np
 
-SIZE = 1000000
-SIM = 100
+SIZE = 1048576
+SIM = 10000
 
 with open("../c/data.binary", "rb") as f:
     x_iter = struct.iter_unpack('f', f.read(4*SIZE))
@@ -17,13 +18,23 @@ def dot(x, w):
         a += x[i] * w[i]
     return a
 
+# start_time = time.time()
+# for _ in range(SIM):
+#     a = dot(x, w)
+# end_time = time.time()
+
+# print("PY  -- It took: %.9f seconds" % ((end_time - start_time) / SIM))
+# print("PY  -- The result was: %f" % a)
+
+x = np.array(x)
+w = np.array(w)
+
 start_time = time.time()
 for _ in range(SIM):
-    a = dot(x, w)
+    a = np.dot(x, w)
 end_time = time.time()
 
-print("It took: %s seconds" % ((end_time - start_time) / SIM))
-print("The result was: %f" % a)
-
+print("NP  -- It took: %.9f seconds" % ((end_time - start_time) / SIM))
+print("NP  -- The result was: %f" % a)
 
 
