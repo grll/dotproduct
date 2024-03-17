@@ -148,7 +148,7 @@ int main()
     for (int i = 0; i < SIM; i++)
     {
         a = 0.0;
-        //#pragma omp parallel for reduction(+:a)
+        #pragma omp parallel for reduction(+:a)
         for (int j=0; j<SIZE; j+=SIZE/32)
         {
             a += asm_dot(j,j+SIZE/32, x, w);
