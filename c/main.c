@@ -1,11 +1,13 @@
+#include <math.h>
 #include <time.h>
+#include <omp.h>
 #include <stdio.h>
 #include <stdlib.h>
 
 // this is redefined in generate_data.c probably better way to handle this
 // with a single source of truth.
 #define SIZE 1048576 // size of the array for the dot product
-#define SIM 1000 // number of simulation to perform
+#define SIM 100 // number of simulation to perform
 
 float dot(float x[], float w[])
 {
@@ -17,10 +19,26 @@ float dot(float x[], float w[])
     return a;
 }
 
-float asm_dot(float x[], float y[])
+float fmadot(float x[], float w[])
+{
+    float a = 0.0;
+    for (int i = 0; i < SIZE; i++)
+    {
+        a = fma(x[i], w[i], a);
+    }
+    return a;
+}
+
+/*
+    * long n: the number of elements in x / y to process.
+    * float * x: pointer to the x array in the heap.
+    * float * y: pointer to the y array in the heap.
+*/
+float asm_dot(long i, long n, float x[], float y[])
 {
     float dot[4] = {0.0, 0.0, 0.0, 0.0};
-    long i = 0;
+
+    // process floats 32 by 32
     __asm__ __volatile__
     (
     //reset all upper 128 bits of all YMM registers
@@ -71,7 +89,7 @@ float asm_dot(float x[], float y[])
         "vfmadd231ps       %%ymm11 , %%ymm15, %%ymm3     \n\t"
 
         "addq $32, %[i] \n\t"
-        "cmpq $1048576, %[i] \n\t"
+        "cmpq %[n], %[i] \n\t"
         "jne 1b \n\t"
 
 	    "vaddps        %%ymm0, %%ymm1, %%ymm0	\n\t"
@@ -87,6 +105,7 @@ float asm_dot(float x[], float y[])
     :
         [i]"+r" (i)
     :
+        [n]"r"  (n),
         [x] "r" (x),
         [y] "r" (y),
         [dot] "r" (dot)
@@ -122,17 +141,27 @@ int main()
     clock_t start, finish;
     double duration;
 
+    double start_time, end_time;
     float a;
     start = clock();
+    start_time = omp_get_wtime();
     for (int i = 0; i < SIM; i++)
     {
-        a = asm_dot(x, w);
+        a = 0.0;
+        //#pragma omp parallel for reduction(+:a)
+        for (int j=0; j<SIZE; j+=SIZE/32)
+        {
+            a += asm_dot(j,j+SIZE/32, x, w);
+        }
     }
+    end_time = omp_get_wtime();
     finish = clock();
     duration = (double)(finish - start) / (CLOCKS_PER_SEC * SIM);
+    double omp_duration = (end_time - start_time) / SIM;
 
     printf("ASM -- The result for a is: %f\n", a);
     printf("ASM -- %.9f seconds\n", duration);
+    printf("ASM -- %.9f omp seconds\n", omp_duration);
 
     start = clock();
     for (int i = 0; i < SIM; i++)
@@ -144,6 +173,17 @@ int main()
 
     printf("C   -- The result for a is: %f\n", a);
     printf("C   -- %.9f seconds\n", duration);
+
+    start = clock();
+    for (int i = 0; i < SIM; i++)
+    {
+        a = fmadot(x, w);
+    }
+    finish = clock();
+    duration = (double)(finish - start) / (CLOCKS_PER_SEC * SIM);
+
+    printf("FMA -- The result for a is: %f\n", a);
+    printf("FMA -- %.9f seconds\n", duration);
 
     free(x);
     free(w);
