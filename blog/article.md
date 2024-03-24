@@ -53,17 +53,35 @@ of such activation functions running parallelly within a layer.
 
 Evidently, the dot product is a recurring element in deep learning. Yet, when performed
 naively in a 'for' loop, it becomes highly inefficient. Given the massive scale of
-today's models - like GROK-1 with a staggering 314 billion weights - efficient execution
-of dot products is not just a nice-to-have, but a necessity. This necessity paves the
-path for constant optimization research, allowing us to scale heights in computing
-performance. 
+today's LLM models - like GROK-1 with a staggering 314 billion weights - efficient
+execution of dot products is not just a nice-to-have, but a necessity. This necessity
+paves the path for constant optimization research, allowing us to scale heights in
+computing performance. 
 
-## Dot Product in Neural Network Activation Functions
+# Practical Experimental Setup
 
-* Dot Product in General Neural Network Training
-* Dot Product in Large Language Models (LLM)
+## Experimental Setup
 
-# Experiments
+The crux of our exploration pivots around practical experiments. In order to conduct
+these, I first needed to create an apt dataset. Taking inspiration from actual neural
+network operations, where the activation of a neuron often oscillates between 0 and 1, I
+have created the dataset similarly. The dataset consists of two vectors (w and x), each
+populated with one million float32 values randomly falling between 0 and 1.
+
+This ensures the problem size is sufficiently large, enabling us to observe discernible
+differences between the efficiency of various approaches tested.
+
+The experimental sandbox for our performance showdown is my personal system, equipped as
+follows:
+
+* CPU: AMD Threadripper 1950X
+* GPU: Nvidia RTX 2070
+* OS: Ubuntu 22.04 LTS
+
+For our C-based implementations, the code has been compiled using gcc.
+
+This setup should ensure precise, controlled and consistent test conditions, providing a
+reliable platform for our investigation into dot product performance optimization.
 
 ## Experimental Analysis: Python Implementations of Dot Product
 
